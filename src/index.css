@@ -249,3 +249,21 @@
 .animate-scaleIn {
   animation: scaleIn 0.5s ease-out;
 }
+
+@keyframes subtle-zoom {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.1);
+  }
+}
+
+.animate-subtle-zoom {
+  animation: subtle-zoom 20s infinite alternate ease-in-out;
+}
+
+/* Page padding offset for internal pages */
+.page-offset {
+  @apply pt-20 md:pt-24;
+}

@@ -1,13 +1,22 @@
-import { useState } from 'react';
-import { Menu, X, Truck, User } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Menu, X, Truck, User, ChevronRight } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const [profilePic, setProfilePic] = useState<string | null>(null);
+
+  // Handle scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -19,7 +28,6 @@ const Header = () => {
           .eq('cpf', userCpf.replace(/\D/g, ''))
           .single();
 
-        // Cast to any to avoid TS error if types are outdated
         const profileData = data as any;
         if (profileData?.foto_url) {
           setProfilePic(profileData.foto_url);
@@ -29,6 +37,8 @@ const Header = () => {
     fetchProfile();
   }, [location.pathname]);
 
+  const isHomePage = location.pathname === '/';
+
   const navigation = [
     { name: 'Início', href: '/' },
     { name: 'Sobre Nós', href: '/sobre' },
@@ -36,7 +46,6 @@ const Header = () => {
     { name: 'Apoiadores', href: '/parceiros' },
     { name: 'Cursos EAD', href: '/cursos' },
     { name: 'Ferramentas', href: '/ferramentas' },
-
     { name: 'Admin', href: '/admin' },
   ];
 
@@ -45,21 +54,37 @@ const Header = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md border-b border-gray-100">
-      <div className="container-custom h-full">
-        <div className="flex items-center justify-between h-24">
+    <header 
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        scrolled 
+          ? 'bg-white shadow-lg py-2' 
+          : isHomePage ? 'bg-transparent py-4' : 'bg-white shadow-md py-2'
+      }`}
+    >
+      <div className="container-custom">
+        <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo Section */}
-          <Link to="/" className="flex items-center space-x-4 hover:opacity-90 transition-opacity group">
-            <div className="relative bg-white p-2 rounded-lg shadow-sm border border-gray-100">
+          <Link to="/" className="flex items-center space-x-3 group">
+            <div className={`relative p-1.5 rounded-xl transition-all duration-300 ${
+              scrolled || !isHomePage ? 'bg-white shadow-sm border border-gray-100' : 'bg-white/10 backdrop-blur-md border border-white/20'
+            }`}>
               <img
                 src="/lovable-uploads/4a99fc5b-079b-4959-9043-f5f3c42c4848.png"
                 alt="Logo Frota Brasil"
-                className="h-14 w-auto transform group-hover:scale-105 transition-transform duration-300"
+                className="h-10 md:h-12 w-auto transform group-hover:scale-105 transition-transform duration-300"
               />
             </div>
             <div className="flex flex-col">
-              <span className="text-2xl font-black text-primary tracking-tight leading-none uppercase">Frota Brasil</span>
-              <span className="text-sm font-medium text-muted-foreground tracking-wide">Associação Nacional</span>
+              <span className={`text-xl md:text-2xl font-black tracking-tighter leading-none uppercase transition-colors ${
+                scrolled || !isHomePage ? 'text-primary' : 'text-white'
+              }`}>
+                Frota Brasil
+              </span>
+              <span className={`text-[10px] md:text-xs font-bold tracking-widest uppercase transition-colors ${
+                scrolled || !isHomePage ? 'text-muted-foreground' : 'text-white/60'
+              }`}>
+                Nacional
+              </span>
             </div>
           </Link>
 
@@ -69,101 +94,99 @@ const Header = () => {
               <Link
                 key={item.name}
                 to={item.href}
-                className={`px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 ${isActive(item.href)
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-gray-600 hover:text-primary hover:bg-gray-50'
-                  }`}
+                className={`px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 ${
+                  isActive(item.href)
+                    ? scrolled || !isHomePage ? 'bg-primary/10 text-primary' : 'bg-white/20 text-white'
+                    : scrolled || !isHomePage ? 'text-gray-600 hover:text-primary hover:bg-gray-50' : 'text-white/80 hover:text-white hover:bg-white/10'
+                }`}
               >
                 {item.name}
               </Link>
             ))}
           </nav>
 
-          {/* CTA Buttons - Desktop */}
-          <div className="hidden lg:flex items-center space-x-3">
+          {/* Actions */}
+          <div className="hidden lg:flex items-center space-x-4">
             <Link
               to="/login"
-              className="px-6 py-2.5 rounded-lg font-bold text-sm text-yellow-950 bg-yellow-400 hover:bg-yellow-500 hover:shadow-md transition-all duration-300"
+              className={`px-5 py-2 rounded-lg font-bold text-sm transition-all duration-300 ${
+                scrolled || !isHomePage 
+                  ? 'text-primary bg-gray-100 hover:bg-gray-200' 
+                  : 'text-white bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20'
+              }`}
             >
               Entrar
             </Link>
+            
+            <Link
+              to="/associacao"
+              className="px-6 py-2.5 rounded-lg font-bold text-sm text-yellow-950 bg-yellow-400 hover:bg-yellow-500 shadow-lg shadow-yellow-500/20 hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2"
+            >
+              <Truck className="w-4 h-4" />
+              Associe-se
+            </Link>
+
             {profilePic && (
               <Link
                 to="/ferramentas/editar-perfil"
-                className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-green-500 hover:opacity-80 transition-opacity shadow-sm"
+                className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-yellow-400 hover:scale-105 transition-transform shadow-md"
               >
                 <img src={profilePic} alt="Meu Perfil" className="w-full h-full object-cover" />
               </Link>
             )}
-            <Link
-              to="/associacao"
-              className="px-6 py-2.5 rounded-lg font-bold text-sm text-white bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 shadow-lg shadow-green-500/30 hover:shadow-green-500/40 hover:-translate-y-0.5 transition-all duration-300 flex items-center"
-            >
-              <Truck className="w-4 h-4 mr-2" />
-              Associe-se Gratuito
-            </Link>
           </div>
 
           {/* Mobile menu button */}
           <button
-            className="lg:hidden p-2 rounded-full bg-green-600 text-white hover:bg-green-700 transition-colors shadow-md"
+            className={`lg:hidden p-2 rounded-xl transition-all duration-300 ${
+              scrolled || !isHomePage ? 'bg-primary text-white' : 'bg-white/10 text-white backdrop-blur-md border border-white/20'
+            }`}
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label="Menu"
           >
-            {isMenuOpen ? <X className="h-8 w-8" /> : <Menu className="h-8 w-8" />}
+            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
         </div>
+      </div>
 
-        {/* Mobile Navigation Dropdown */}
-        {isMenuOpen && (
-          <div className="lg:hidden absolute left-0 right-0 top-24 bg-white border-t border-gray-100 shadow-xl animate-slideDown max-h-[80vh] overflow-y-auto">
-            <div className="container-custom py-6 space-y-2">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`block px-4 py-3 rounded-lg text-base font-semibold transition-colors ${isActive(item.href)
+      {/* Mobile Navigation Dropdown */}
+      {isMenuOpen && (
+        <div className="lg:hidden absolute left-0 right-0 top-full bg-white border-t border-gray-100 shadow-2xl animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="container-custom py-6 space-y-1">
+            {navigation.map((item) => (
+              <Link
+                key={item.name}
+                to={item.href}
+                className={`flex items-center justify-between px-4 py-3 rounded-xl text-base font-bold transition-colors ${
+                  isActive(item.href)
                     ? 'bg-primary/5 text-primary'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-primary'
-                    }`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item.name}
-                </Link>
-              ))}
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {item.name}
+                <ChevronRight className={`h-4 w-4 ${isActive(item.href) ? 'opacity-100' : 'opacity-0 transition-opacity'}`} />
+              </Link>
+            ))}
 
-              {profilePic && (
-                <Link
-                  to="/ferramentas/editar-perfil"
-                  className="flex items-center space-x-3 px-4 py-3 rounded-lg bg-gray-50 border border-gray-100 mb-2 mt-2"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-green-500">
-                    <img src={profilePic} alt="Meu Perfil" className="w-full h-full object-cover" />
-                  </div>
-                  <span className="font-bold text-gray-700">Meu Perfil</span>
-                </Link>
-              )}
-              <div className="pt-4 mt-4 border-t border-gray-100 flex flex-col space-y-3 px-4">
-                <Link
-                  to="/login"
-                  className="w-full text-center py-3 rounded-lg font-bold border-2 border-gray-200 text-gray-700 hover:border-primary hover:text-primary transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Área do Associado
-                </Link>
-                <Link
-                  to="/associacao"
-                  className="w-full text-center py-3 rounded-lg font-bold text-white bg-green-600 shadow-lg shadow-green-600/20"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Associe-se Gratuito
-                </Link>
-              </div>
+            <div className="pt-4 flex flex-col space-y-3 px-2">
+              <Link
+                to="/login"
+                className="w-full text-center py-4 rounded-xl font-bold bg-gray-100 text-gray-700"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Área do Associado
+              </Link>
+              <Link
+                to="/associacao"
+                className="w-full text-center py-4 rounded-xl font-bold text-yellow-950 bg-yellow-400 shadow-lg shadow-yellow-500/20"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Associe-se Agora
+              </Link>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </header>
   );
 };
